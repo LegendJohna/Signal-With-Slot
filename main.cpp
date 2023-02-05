@@ -8,7 +8,7 @@ private:
 public:
 	void setData(int num) { data = num; }
 	void printData() { std::cout << "类内函数,参数是" << data << std::endl; };
-	Event<int> clicked;
+	Event<> clicked;
 };
 
 void print(int num)
@@ -18,14 +18,12 @@ void print(int num)
 
 int main()
 {
-	Button* button = new Button();;
-	button->clicked.connect(&print);
-	int lambdaConnection = button->clicked.connect([=](int num) {std::cout << num << std::endl; });
-	button->clicked.connect(button,&Button::setData);
-	button->clicked.emit(1);
-	button->clicked.disconncet(lambdaConnection);
-	button->clicked.emit(10);
+	int b = 10;
+	Button* button = new Button();
+	button->clicked.connect(button, &Button::printData);
+	button->clicked.emit();
+	button->clicked.emit();
 	button->clicked.disconncet("ALL");
-	button->clicked.emit(1);
+	button->clicked.emit();
 	delete button;
 }

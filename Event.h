@@ -71,13 +71,7 @@ public:
 		return HandlerList.empty();
 	}
 	//发送信号也就是触发之前定义仿函数
-	void emit(Args&...args)
-	{
-		for (auto it = HandlerList.begin(); it != HandlerList.end(); it++)
-		{
-			(*it->second)(args...);
-		}
-	}
+	template<typename ...Args>
 	void emit(Args&&...args)
 	{
 		for (auto it = HandlerList.begin(); it != HandlerList.end(); it++)
