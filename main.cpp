@@ -4,26 +4,52 @@
 class Button
 {
 private:
-	int data = 0;
+	int data;
 public:
-	void setData(int num) { data = num; }
-	void printData() { std::cout << "类内函数,参数是" << data << std::endl; };
-	Event<> clicked;
+	void setData(int num) {
+		std::cout << "类内函数，参数是： " << num << std::endl;
+		data = num;
+	}
+	void printData() { std::cout << "成员参数是：" << data << std::endl; };
+	Event<int> clicked;
 };
 
 void print(int num)
 {
-	std::cout << "普通函数" << " 参数是："  <<num<< std::endl;
+	std::cout << "全局函数，参数是：  " << num << std::endl;
 }
-
 int main()
 {
 	int b = 10;
 	Button* button = new Button();
-	button->clicked.connect(button, &Button::printData);
-	button->clicked.emit();
-	button->clicked.emit();
-	button->clicked.disconncet("ALL");
-	button->clicked.emit();
+	Button* button1 = new Button();
+	button->clicked.connect([=](int num) {std::cout << "lambda表达式，参数是：" << num << std::endl; });
+	button->clicked.emit(100);
+	button->clicked.disconnect([=](int num) {std::cout << "lambda表达式，参数是：" << num << std::endl; });
+	button->clicked.emit(100);
+
+	std::cout << std::endl << std::endl << std::endl << "//////////////////////////////////" << std::endl << std::endl << std::endl;
+
+
+	button1->printData();
+	button->clicked.connect(button1, &Button::setData);
+	button->clicked.emit(100);
+	button1->printData();
+	button->clicked.emit(100);
+	//断开连接
+	button->clicked.disconnect(button1, &Button::setData);
+	button->clicked.emit(111);
+	button1->printData();
+
+	std::cout  << std::endl << std::endl << std::endl << "//////////////////////////////////" << std::endl << std::endl << std::endl;
+
+
+	button->clicked.connect(&print);
+	button->clicked.emit(111);
+	button->clicked.disconnect(&print);
+	button->clicked.emit(111);
+
+
 	delete button;
+	
 }
