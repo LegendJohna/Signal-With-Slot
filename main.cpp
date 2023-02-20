@@ -1,6 +1,7 @@
 #include "Event.h"
 //示例代码信号与槽
 //槽函数参数必须和信号参数对等 类型数量都一样
+
 class Button
 {
 private:
@@ -43,7 +44,10 @@ int main()
 
 	std::cout  << std::endl << std::endl << std::endl << "//////////////////////////////////" << std::endl << std::endl << std::endl;
 
-
+	
+	button->clicked.connect(&print);
+	button->clicked.connect(&print);
+	button->clicked.connect(&print);
 	button->clicked.connect(&print);
 	button->clicked.emit(111);
 	button->clicked.disconnect(&print);
