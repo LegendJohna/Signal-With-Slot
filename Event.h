@@ -1,6 +1,4 @@
-#include <iostream>
 #include <map>
-#include <string>
 #include "EventHandler.h"
 using std::map;
 using std::pair;
@@ -26,48 +24,72 @@ public:
 	void connect(T func)
 	{
 		auto address = Address(nullptr, &func);
-		auto handler = new CommonEventHandler<T, Args...>(func);
-		HandlerList.insert(pair<Address, Handler>(address, handler));
+		if (HandlerList.count(address) == 0)
+		{
+			auto handler = new CommonEventHandler<T, Args...>(func);
+			HandlerList.insert(pair<Address, Handler>(address, handler));
+		}
+
 	}
 	//全局函数
 	template <typename T>
 	void connect(T* func)
 	{
 		auto address = Address(nullptr, func);
-		auto handler = new GlobalEventHandler<T*, Args...>(func);
-		HandlerList.insert(pair<Address, Handler>(address, handler));
+		if(HandlerList.count(address) == 0)
+		{
+			auto handler = new GlobalEventHandler<T*, Args...>(func);
+			HandlerList.insert(pair<Address, Handler>(address, handler));
+		}
+		
 	}
 	//添加类成员函数
 	template <typename T>
 	void connect(T* receiver, void(T::* func)(Args...))
 	{
 		auto address = Address(receiver, &func);
-		auto handler = new ClassEventHandler<T, Args...>(receiver, func);
-		HandlerList.insert(pair<Address, Handler>(address, handler));
+		if (HandlerList.count(address) == 0)
+		{
+			auto handler = new ClassEventHandler<T, Args...>(receiver, func);
+			HandlerList.insert(pair<Address, Handler>(address, handler));
+		}
+		
 	}
 	//断开普通函数
 	template <typename T>
 	void disconnect(T func)
 	{
 		 auto address = Address(nullptr, &func);
-		 delete HandlerList.at(address);
-		 HandlerList.erase(address);
+		 if (HandlerList.count(address) == 1)
+		 {
+			 delete HandlerList.at(address);
+			 HandlerList.erase(address);
+		 }
+		 
 	}
 	//断开全局函数
 	template <typename T>
 	void disconnect(T* func)
 	{
 		auto address = Address(nullptr, func);
-		delete HandlerList.at(address);
-		HandlerList.erase(address);
+		if (HandlerList.count(address) == 1)
+		{
+			delete HandlerList.at(address);
+			HandlerList.erase(address);
+		}
+
 	}
 	//断开类内函数
 	template <typename T>
 	void disconnect(T* receiver, void(T::* func)(Args...))
 	{
 		auto address = Address(receiver, &func);
-		delete HandlerList.at(address);
-		HandlerList.erase(address);
+		if (HandlerList.count(address) == 1)
+		{
+			delete HandlerList.at(address);
+			HandlerList.erase(address);
+		}
+
 	}
 	//发送信号也就是触发之前定义仿函数
 	template<typename ...Srgs>
