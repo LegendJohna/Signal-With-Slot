@@ -1,6 +1,7 @@
 #include <map>
 #include <mutex>
 #include "EventHandler.h"
+#include <iostream>
 using std::map;
 using std::pair;
 using std::mutex;
@@ -25,7 +26,7 @@ public:
 		auto address = Address(nullptr, &func);
 		if (HandlerList.count(address) == 0)
 		{
-			auto handler = new CommonEventHandler<T, Args...>(func);
+			auto handler = new OrdinaryEventHandler<T, Args...>(func);
 			HandlerList.insert(pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
@@ -49,7 +50,12 @@ public:
 	void connect(T* receiver, void(T::* func)(Args...))
 	{
 		MapMutex.lock();
-		auto address = Address(receiver, &func);
+		//把函数指针里面的地址取出来作为标识
+		//因为这个类成员函数指针比较特殊，所以func里面其实存的不是地址
+		//也不能直接转换为void*只能通过特殊手段取出来了
+		void* buffer;
+		memcpy(&buffer, &func, sizeof(func));
+		auto address = Address(receiver, buffer);
 		if (HandlerList.count(address) == 0)
 		{
 			auto handler = new ClassEventHandler<T, Args...>(receiver, func);
@@ -91,7 +97,11 @@ public:
 	void disconnect(T* receiver, void(T::* func)(Args...))
 	{
 		MapMutex.lock();
-		auto address = Address(receiver, &func);
+		//同样取出来类成员函数指针里面的内容
+		//使用mecmpy就无法取出来
+		void* buffer = nullptr;
+		memcpy(&buffer, &func, sizeof(func));
+		auto address = Address(receiver, buffer);
 		if (HandlerList.count(address) == 1)
 		{
 			delete HandlerList.at(address);
@@ -113,12 +123,16 @@ public:
 	void disconnectAllReceiver(void* receiver)
 	{
 		MapMutex.lock();
-		for (auto it = HandlerList.begin(); it != HandlerList.end(); it++)
+		for (auto it = HandlerList.begin(); it != HandlerList.end();)
 		{
-			if (receiver == it->first->first)
+			if (receiver == it->first.first)
 			{
 				delete (it->second);
-				HandlerList.erase(it);
+				HandlerList.erase(it++);
+			}
+			else
+			{
+				it++;
 			}
 		}
 		MapMutex.unlock();

@@ -20,12 +20,12 @@ public:
 //首先定义第一个函数接口，这个是为了给lambda,仿函数使用的接口，为了动态管理lambda内存
 //通过new调用其拷贝构造函数，否则在lambda里面捕获的参数会销毁
 template<typename Function, typename ...Args>
-class CommonEventHandler :public EventHandlerInterface<Args...>
+class OrdinaryEventHandler :public EventHandlerInterface<Args...>
 {
 private:
 	Function* m_Handler;
 public:
-	CommonEventHandler(Function f)
+	OrdinaryEventHandler(Function f)
 	{
 		m_Handler = new Function(f);
 	};
@@ -33,7 +33,7 @@ public:
 	{
 		(*m_Handler)(args...);
 	} 
-	~CommonEventHandler()
+	~OrdinaryEventHandler()
 	{
 		delete m_Handler;
 	}
