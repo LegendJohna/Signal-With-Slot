@@ -2,7 +2,10 @@
 #include <map>
 #include <unordered_set>
 #include <mutex>
-#include <iostream>
+using std::unordered_set;
+using std::map;
+using std::pair;
+using std::mutex;
 /*
 	这个类是在定义抽象函数接口
 	为了实现类似function那样的功能
@@ -79,12 +82,20 @@ public:
 		(m_Receiver->*m_Handler)(args...);
 	}
 };
-using std::map;
-using std::pair;
-using std::mutex;
-using std::unordered_set;
+//用来存object地址，用来进行校正
 static unordered_set<void*> ObjectList;
-
+class Object
+{
+public:
+	Object()
+	{
+		ObjectList.insert((void*)this);
+	}
+	~Object()
+	{
+		ObjectList.erase((void*)this);
+	}
+};
 //Event
 template<typename...Args>
 class Event
@@ -125,13 +136,15 @@ public:
 			HandlerList.insert(pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
-
 	}
 	//添加类成员函数
 	template <typename T>
 	void connect(T* receiver, void(T::* func)(Args...))
 	{
 		MapMutex.lock();
+		//把函数指针里面的地址取出来作为标识
+		//因为这个类成员函数指针比较特殊，所以func里面其实存的不是地址
+		//也不能直接转换为void*只能通过特殊手段取出来了
 		void* buffer = nullptr;
 		memcpy(&buffer, &func, sizeof(func));
 		auto address = Address(receiver, buffer);
@@ -141,7 +154,6 @@ public:
 			HandlerList.insert(pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
-
 	}
 	//断开普通函数
 	template <typename T>
@@ -155,7 +167,6 @@ public:
 			HandlerList.erase(address);
 		}
 		MapMutex.unlock();
-
 	}
 	//断开全局函数
 	template <typename T>
@@ -169,7 +180,6 @@ public:
 			HandlerList.erase(address);
 		}
 		MapMutex.unlock();
-
 	}
 	//断开类内函数
 	template <typename T>
@@ -177,7 +187,7 @@ public:
 	{
 		MapMutex.lock();
 		void* buffer = nullptr;
-		memcpy(&buffer, &func, sizeof(func));
+		memcpy(&buffer, &func, sizeof(func));   //强制取出函数指针内部的地址
 		auto address = Address(receiver, buffer);
 		if (HandlerList.count(address) == 1)
 		{
@@ -185,7 +195,6 @@ public:
 			HandlerList.erase(address);
 		}
 		MapMutex.unlock();
-
 	}
 	void disconnectAllConnection()
 	{
@@ -197,23 +206,6 @@ public:
 		HandlerList.clear();
 		MapMutex.unlock();
 	}
-	void disconnectAllReceiver(void* receiver)
-	{
-		MapMutex.lock();
-		for (auto it = HandlerList.begin(); it != HandlerList.end();)
-		{
-			if (receiver == it->first.first)
-			{
-				delete (it->second);
-				HandlerList.erase(it++);
-			}
-			else
-			{
-				it++;
-			}
-		}
-		MapMutex.unlock();
-	}
 	//发送信号也就是触发之前定义仿函数
 	template<typename ...Srgs>
 	void emit(Srgs&&...srgs)
@@ -221,40 +213,25 @@ public:
 		MapMutex.lock();
 		for (auto it = HandlerList.begin(); it != HandlerList.end();)
 		{
-			if (it->first.first == nullptr)
+			if (it->first.first == nullptr)    //第一个参数为nullptr说明是不是类内函数,正常执行
 			{
 				(*it->second)(srgs...);
 				it++;
 			}
-			else
-			{
-				if (ObjectList.count(it->first.first) == 0)
-				{
-					delete (it->second);
-					HandlerList.erase(it++);
-				}
-				else
-				{
-					(*it->second)(srgs...);
-					it++;
-				}
+			else if (ObjectList.count(it->first.first) == 0) //再object里面找不到发送者,说明是被delete了
+			{                                                //自动校正，删除该元素
+				delete (it->second);
+				HandlerList.erase(it++);
 			}
-			
+			else    //这种情况说明，能找到正常触发
+			{
+				(*it->second)(srgs...);
+				it++;
+			}
 		}
 		MapMutex.unlock();
 	}
 };
 
-class Object
-{
-public:
-	Object()
-	{
-		ObjectList.insert((void*)this);
-	}
-	~Object()
-	{
-		ObjectList.erase((void*)this);
-	}
-};
+
 
