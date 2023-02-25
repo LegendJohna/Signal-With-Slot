@@ -13,18 +13,18 @@ class Observer;
 class Subject
 {
 protected:
-	list<Observer*> ObserverList;
+		list<Observer*> ObserverList;
 public:
-	void attach(Observer* observer)
-	{
-		ObserverList.push_back(observer);
-	}
-	void deatch(Observer* observer)
-	{
-		ObserverList.remove(observer);
-	}
-	virtual void notify(string msg) = 0;
-	virtual ~Subject() {};
+		void attach(Observer* observer)
+		{
+			ObserverList.push_back(observer);
+		}
+		void deatch(Observer* observer)
+		{
+			ObserverList.remove(observer);
+		}
+		virtual void notify(string msg) = 0;
+		virtual ~Subject() {};
 };
 ```
 观察者实现
