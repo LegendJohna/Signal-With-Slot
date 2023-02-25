@@ -5,17 +5,6 @@
 using std::map;
 using std::pair;
 using std::mutex;
-class FFFF
-{
-
-};
-
-
-
-
-
-
-
 template<typename...Args>
 class Event
 {
@@ -29,7 +18,7 @@ public:
 	{
 		disconnectAllConnection();
 	}
-	//·Âº¯Êı£¬¾²Ì¬º¯Êı£¬lambda±í´ïÊ½
+	//ä»¿å‡½æ•°ï¼Œé™æ€å‡½æ•°ï¼Œlambdaè¡¨è¾¾å¼
 	template <typename T>
 	void connect(T func)
 	{
@@ -42,7 +31,7 @@ public:
 		}
 		MapMutex.unlock();
 	}
-	//È«¾Öº¯Êı
+	//å…¨å±€å‡½æ•°
 	template <typename T>
 	void connect(T* func)
 	{
@@ -56,14 +45,14 @@ public:
 		MapMutex.unlock();
 		
 	}
-	//Ìí¼ÓÀà³ÉÔ±º¯Êı
+	//æ·»åŠ ç±»æˆå‘˜å‡½æ•°
 	template <typename T>
 	void connect(T* receiver, void(T::* func)(Args...))
 	{
 		MapMutex.lock();
-		//°Ñº¯ÊıÖ¸ÕëÀïÃæµÄµØÖ·È¡³öÀ´×÷Îª±êÊ¶
-		//ÒòÎªÕâ¸öÀà³ÉÔ±º¯ÊıÖ¸Õë±È½ÏÌØÊâ£¬ËùÒÔfuncÀïÃæÆäÊµ´æµÄ²»ÊÇµØÖ·
-		//Ò²²»ÄÜÖ±½Ó×ª»»Îªvoid*Ö»ÄÜÍ¨¹ıÌØÊâÊÖ¶ÎÈ¡³öÀ´ÁË
+		//æŠŠå‡½æ•°æŒ‡é’ˆé‡Œé¢çš„åœ°å€å–å‡ºæ¥ä½œä¸ºæ ‡è¯†
+		//å› ä¸ºè¿™ä¸ªç±»æˆå‘˜å‡½æ•°æŒ‡é’ˆæ¯”è¾ƒç‰¹æ®Šï¼Œæ‰€ä»¥funcé‡Œé¢å…¶å®å­˜çš„ä¸æ˜¯åœ°å€
+		//ä¹Ÿä¸èƒ½ç›´æ¥è½¬æ¢ä¸ºvoid*åªèƒ½é€šè¿‡ç‰¹æ®Šæ‰‹æ®µå–å‡ºæ¥äº†
 		void* buffer;
 		memcpy(&buffer, &func, sizeof(func));
 		auto address = Address(receiver, buffer);
@@ -75,7 +64,7 @@ public:
 		MapMutex.unlock();
 		
 	}
-	//¶Ï¿ªÆÕÍ¨º¯Êı
+	//æ–­å¼€æ™®é€šå‡½æ•°
 	template <typename T>
 	void disconnect(T func)
 	{
@@ -89,7 +78,7 @@ public:
 		 MapMutex.unlock();
 		 
 	}
-	//¶Ï¿ªÈ«¾Öº¯Êı
+	//æ–­å¼€å…¨å±€å‡½æ•°
 	template <typename T>
 	void disconnect(T* func)
 	{
@@ -103,13 +92,13 @@ public:
 		MapMutex.unlock();
 
 	}
-	//¶Ï¿ªÀàÄÚº¯Êı
+	//æ–­å¼€ç±»å†…å‡½æ•°
 	template <typename T>
 	void disconnect(T* receiver, void(T::* func)(Args...))
 	{
 		MapMutex.lock();
-		//Í¬ÑùÈ¡³öÀ´Àà³ÉÔ±º¯ÊıÖ¸ÕëÀïÃæµÄÄÚÈİ
-		//Ê¹ÓÃmecmpy¾ÍÎŞ·¨È¡³öÀ´
+		//åŒæ ·å–å‡ºæ¥ç±»æˆå‘˜å‡½æ•°æŒ‡é’ˆé‡Œé¢çš„å†…å®¹
+		//ä½¿ç”¨mecmpyå°±æ— æ³•å–å‡ºæ¥
 		void* buffer = nullptr;
 		memcpy(&buffer, &func, sizeof(func));
 		auto address = Address(receiver, buffer);
@@ -148,7 +137,7 @@ public:
 		}
 		MapMutex.unlock();
 	}
-	//·¢ËÍĞÅºÅÒ²¾ÍÊÇ´¥·¢Ö®Ç°¶¨Òå·Âº¯Êı
+	//å‘é€ä¿¡å·ä¹Ÿå°±æ˜¯è§¦å‘ä¹‹å‰å®šä¹‰ä»¿å‡½æ•°
 	template<typename ...Srgs>
 	void emit(Srgs&&...srgs)
 	{
