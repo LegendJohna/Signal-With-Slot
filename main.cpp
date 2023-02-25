@@ -1,25 +1,25 @@
-#include "Event.h"
+#include "Event.hpp"
 #include <iostream>
 
 size_t buffer = 0;
 void* operator new(size_t size)
 {
 	buffer += size;
-	std::cout << "                                              开辟的内存是：" << buffer << std::endl;
+	std::cout << "                                                         开辟的内存是：" << buffer << std::endl;
 	return malloc(size);
 }
 
 void operator delete(void* p, size_t size)
 {
 	buffer -= size;
-	std::cout << "                                              释放过的内存是：" << buffer << std::endl;
+	std::cout << "                                                         释放过的内存是：" << buffer << std::endl;
 	free(p);
 }
 
 //示例代码信号与槽
 //槽函数参数必须和信号参数对等 类型数量都一样
 
-class Button
+class Button :public Object
 {
 private:
 	int data;
@@ -57,11 +57,16 @@ int main()
 	//断开连接
 	button->clicked.disconnect(button1, &Button::setData);
 	button->clicked.emit(111);
-	button1->printData();
+	//自动断开连接
+	std::cout << "对象销毁，自动断开连接" << std::endl;
+	button->clicked.connect(button1, &Button::setData);
+	delete button1;
+	button->clicked.emit(111);
+
 
 	std::cout << std::endl << std::endl << std::endl << "//////////////////////////////////" << std::endl << std::endl;
 
-	
+
 	button->clicked.connect(&print);
 	button->clicked.connect(&print);
 	button->clicked.connect(&print);
@@ -74,6 +79,4 @@ int main()
 
 
 	delete button;
-	delete button1;
-	
 }
