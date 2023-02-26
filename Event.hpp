@@ -2,10 +2,6 @@
 #include <map>
 #include <unordered_set>
 #include <mutex>
-using std::unordered_set;
-using std::map;
-using std::pair;
-using std::mutex;
 /*
 	这个类是在定义抽象函数接口
 	为了实现类似function那样的功能
@@ -83,7 +79,7 @@ public:
 	}
 };
 //用来存object地址，用来进行校正
-static unordered_set<void*> ObjectList;
+static std::unordered_set<void*> ObjectList;
 class Object
 {
 public:
@@ -100,17 +96,17 @@ public:
 template<typename...Args>
 class Event
 {
-
 	using Handler = EventHandlerInterface<Args...>*;
-	using Address = pair<void*, void*>;
+	using Address = std::pair<void*, void*>;
 private:
-	mutex MapMutex;
-	map<Address, Handler> HandlerList;
+	std::mutex MapMutex;
+	std::map<Address, Handler> HandlerList;
 public:
 	~Event()
 	{
 		disconnectAllConnection();
 	}
+	inline int ConnectionCount() { return HandlerList.size(); }
 	//仿函数，静态函数，lambda表达式
 	template <typename T>
 	void connect(T func)
@@ -120,7 +116,7 @@ public:
 		if (HandlerList.count(address) == 0)
 		{
 			auto handler = new OrdinaryEventHandler<T, Args...>(func);
-			HandlerList.insert(pair<Address, Handler>(address, handler));
+			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
 	}
@@ -133,7 +129,7 @@ public:
 		if (HandlerList.count(address) == 0)
 		{
 			auto handler = new GlobalEventHandler<T*, Args...>(func);
-			HandlerList.insert(pair<Address, Handler>(address, handler));
+			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
 	}
@@ -151,7 +147,7 @@ public:
 		if (HandlerList.count(address) == 0)
 		{
 			auto handler = new ClassEventHandler<T, Args...>(receiver, func);
-			HandlerList.insert(pair<Address, Handler>(address, handler));
+			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 		MapMutex.unlock();
 	}
