@@ -2,7 +2,7 @@
 #include <map>
 #include <unordered_set>
 #include <mutex>
-#include <iostream>
+#include <atomic>
 /*
 	这个类是在定义抽象函数接口
 	为了实现类似function那样的功能
@@ -109,7 +109,7 @@ private:
 	std::map<T, U> WriteMap;
 	std::mutex MapMutex;
 	bool Writed = false;
-	int RendingNum = 0;
+	std::atomic<int> RendingNum = 0;
 	unsigned int m_Size = 0;
 public:
 	void insert(std::pair<T,U> pair)
@@ -155,9 +155,8 @@ public:
 	}
 	bool ReadyRend()
 	{
-		std::lock_guard<std::mutex> lock(MapMutex);
-		while (1)
-		{
+		while (1) 		//有两种情况可以同时读写,第一种情况没人读，那你随便读				
+		{				//第二种情况有人读，数据不会改，你也可以去读,如果都不满足就等待别人读完了再读
 			if (RendingNum == 0)
 			{
 				RendingNum++;
@@ -172,7 +171,6 @@ public:
 	}
 	void RendEnd()
 	{
-		std::lock_guard<std::mutex> lock(MapMutex);
 		RendingNum--;
 	}
 };
@@ -276,8 +274,6 @@ public:
 	template<typename ...Srgs>
 	void emit(Srgs&&...srgs)
 	{
-		//有两种情况可以同时读写,第一种情况没人读，那你随便读
-		//第二种情况有人读，数据不会改，你也可以去读
 		if (HandlerList.ReadyRend())
 		{
 			auto result = HandlerList.BeginAndEnd();
