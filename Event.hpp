@@ -2,13 +2,12 @@
 #include <map>
 #include <unordered_set>
 #include <mutex>
-#include <iostream>
 /*
-	Õâ¸öÀàÊÇÔÚ¶¨Òå³éÏóº¯Êı½Ó¿Ú
-	ÎªÁËÊµÏÖÀàËÆfunctionÄÇÑùµÄ¹¦ÄÜ
-	²ÉÓÃµÄ·½·¨ÊÇ¶àÌ¬+Ä£°å
+	è¿™ä¸ªç±»æ˜¯åœ¨å®šä¹‰æŠ½è±¡å‡½æ•°æ¥å£
+	ä¸ºäº†å®ç°ç±»ä¼¼functioné‚£æ ·çš„åŠŸèƒ½
+	é‡‡ç”¨çš„æ–¹æ³•æ˜¯å¤šæ€+æ¨¡æ¿
 */
-//¿É±äÄ£°å²ÎÊı
+//å¯å˜æ¨¡æ¿å‚æ•°
 template <typename ...Args>
 class EventHandlerInterface
 {
@@ -18,11 +17,11 @@ private:
 public:
 	EventHandlerInterface() {};
 	virtual ~EventHandlerInterface() {};
-	//ÖØÔØ()ÊÇÎªÁË·½±ãÖ®ºóµ÷ÓÃ
+	//é‡è½½()æ˜¯ä¸ºäº†æ–¹ä¾¿ä¹‹åè°ƒç”¨
 	virtual void operator()(Args&...args) = 0;
 };
-//Ê×ÏÈ¶¨ÒåµÚÒ»¸öº¯Êı½Ó¿Ú£¬Õâ¸öÊÇÎªÁË¸ølambda,·Âº¯ÊıÊ¹ÓÃµÄ½Ó¿Ú£¬ÎªÁË¶¯Ì¬¹ÜÀílambdaÄÚ´æ
-//Í¨¹ınewµ÷ÓÃÆä¿½±´¹¹Ôìº¯Êı£¬·ñÔòÔÚlambdaÀïÃæ²¶»ñµÄ²ÎÊı»áÏú»Ù
+//é¦–å…ˆå®šä¹‰ç¬¬ä¸€ä¸ªå‡½æ•°æ¥å£ï¼Œè¿™ä¸ªæ˜¯ä¸ºäº†ç»™lambda,ä»¿å‡½æ•°ä½¿ç”¨çš„æ¥å£ï¼Œä¸ºäº†åŠ¨æ€ç®¡ç†lambdaå†…å­˜
+//é€šè¿‡newè°ƒç”¨å…¶æ‹·è´æ„é€ å‡½æ•°ï¼Œå¦åˆ™åœ¨lambdaé‡Œé¢æ•è·çš„å‚æ•°ä¼šé”€æ¯
 template<typename Function, typename ...Args>
 class OrdinaryEventHandler :public EventHandlerInterface<Args...>
 {
@@ -42,8 +41,8 @@ public:
 		delete m_Handler;
 	}
 };
-//¶¨ÒåÈ«¾Öº¯Êı½Ó¿Ú,ÊÂÊµÉÏÈ«¾Öº¯ÊıÒ²¿ÉÒÔÊ¹ÓÃµÚÒ»¸ö½Ó¿Ú
-//µ«ÊÇÃ»±ØÒªnewÒ»¸ö¿½±´,ÎÒÃÇÎªËü×¨ÃÅ¶¨ÒåÒ»¸ö½Ó¿Ú
+//å®šä¹‰å…¨å±€å‡½æ•°æ¥å£,äº‹å®ä¸Šå…¨å±€å‡½æ•°ä¹Ÿå¯ä»¥ä½¿ç”¨ç¬¬ä¸€ä¸ªæ¥å£
+//ä½†æ˜¯æ²¡å¿…è¦newä¸€ä¸ªæ‹·è´,æˆ‘ä»¬ä¸ºå®ƒä¸“é—¨å®šä¹‰ä¸€ä¸ªæ¥å£
 template<typename FunctionPointer, typename ...Args>
 class GlobalEventHandler :public EventHandlerInterface<Args...>
 {
@@ -59,8 +58,8 @@ public:
 		(*m_Handler)(args...);
 	}
 };
-//½ÓÏÂÀ´ÊÇÀàÄÚ²¿º¯ÊıÀ²,Õâ¸öĞèÒª¶àÒ»¸ö±äÁ¿À´´æ¶ÔÏóµÄÖ¸Õë
-//ÀàÄÚ²¿º¯ÊıµÄ½Ó¿Ú
+//æ¥ä¸‹æ¥æ˜¯ç±»å†…éƒ¨å‡½æ•°å•¦,è¿™ä¸ªéœ€è¦å¤šä¸€ä¸ªå˜é‡æ¥å­˜å¯¹è±¡çš„æŒ‡é’ˆ
+//ç±»å†…éƒ¨å‡½æ•°çš„æ¥å£
 template<typename T, typename ...Args>
 class ClassEventHandler :public EventHandlerInterface<Args...>
 {
@@ -79,7 +78,7 @@ public:
 		(m_Receiver->*m_Handler)(args...);
 	}
 };
-//ÓÃÀ´´æobjectµØÖ·£¬ÓÃÀ´½øĞĞĞ£Õı
+//ç”¨æ¥å­˜objectåœ°å€ï¼Œç”¨æ¥è¿›è¡Œæ ¡æ­£
 static std::unordered_set<void*> ObjectList;
 class Object
 {
@@ -93,8 +92,8 @@ public:
 		ObjectList.erase((void*)this);
 	}
 };
-//¶àÏß³Ì´¦Àí,²ÉÓÃË«mapÀ´¼ÌĞø¹ÜÀí
-//Í¬Ê±·µ»ØÊ×Î»µü´úÆ÷
+//å¤šçº¿ç¨‹å¤„ç†,é‡‡ç”¨åŒmapæ¥ç»§ç»­ç®¡ç†
+//åŒæ—¶è¿”å›é¦–ä½è¿­ä»£å™¨
 template<typename T, typename U>
 struct ConcurrentMapIterator
 {
@@ -165,12 +164,12 @@ public:
 		return { ReadMap.begin(),ReadMap.end() };
 	}
 };
-//ÊÂ¼ş´¦Àí
+//äº‹ä»¶å¤„ç†
 template<typename...Args>
 class Event
 {
 	using Handler = EventHandlerInterface<Args...>*;
-	using Address = std::pair<void*, void*>;//µÚÒ»¸öÊÇ¶ÔÏóµØÖ·£¬µÚ¶ş¸öÊÇº¯ÊıµØÖ·
+	using Address = std::pair<void*, void*>;//ç¬¬ä¸€ä¸ªæ˜¯å¯¹è±¡åœ°å€ï¼Œç¬¬äºŒä¸ªæ˜¯å‡½æ•°åœ°å€
 private:
 	ConcurrentMap<Address, Handler> HandlerList;
 public:
@@ -179,7 +178,7 @@ public:
 		disconnectAllConnection();
 	}
 	inline int ConnectionCount() { return HandlerList.size(); }
-	//·Âº¯Êı£¬¾²Ì¬º¯Êı£¬lambda±í´ïÊ½
+	//ä»¿å‡½æ•°ï¼Œé™æ€å‡½æ•°ï¼Œlambdaè¡¨è¾¾å¼
 	template <typename T>
 	void connect(T func)
 	{
@@ -190,7 +189,7 @@ public:
 			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 	}
-	//È«¾Öº¯Êı
+	//å…¨å±€å‡½æ•°
 	template <typename T>
 	void connect(T* func)
 	{
@@ -201,13 +200,13 @@ public:
 			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 	}
-	//Ìí¼ÓÀà³ÉÔ±º¯Êı
+	//æ·»åŠ ç±»æˆå‘˜å‡½æ•°
 	template <typename T>
 	void connect(T* receiver, void(T::* func)(Args...))
 	{
-		//°Ñº¯ÊıÖ¸ÕëÀïÃæµÄµØÖ·È¡³öÀ´×÷Îª±êÊ¶
-		//ÒòÎªÕâ¸öÀà³ÉÔ±º¯ÊıÖ¸Õë±È½ÏÌØÊâ£¬ËùÒÔfuncÀïÃæÆäÊµ´æµÄ²»ÊÇµØÖ·
-		//Ò²²»ÄÜÖ±½Ó×ª»»Îªvoid*Ö»ÄÜÍ¨¹ıÌØÊâÊÖ¶ÎÈ¡³öÀ´ÁË
+		//æŠŠå‡½æ•°æŒ‡é’ˆé‡Œé¢çš„åœ°å€å–å‡ºæ¥ä½œä¸ºæ ‡è¯†
+		//å› ä¸ºè¿™ä¸ªç±»æˆå‘˜å‡½æ•°æŒ‡é’ˆæ¯”è¾ƒç‰¹æ®Šï¼Œæ‰€ä»¥funcé‡Œé¢å…¶å®å­˜çš„ä¸æ˜¯åœ°å€
+		//ä¹Ÿä¸èƒ½ç›´æ¥è½¬æ¢ä¸ºvoid*åªèƒ½é€šè¿‡ç‰¹æ®Šæ‰‹æ®µå–å‡ºæ¥äº†
 		void* buffer = nullptr;
 		memcpy(&buffer, &func, sizeof(func));
 		auto address = Address(receiver, buffer);
@@ -217,7 +216,7 @@ public:
 			HandlerList.insert(std::pair<Address, Handler>(address, handler));
 		}
 	}
-	//¶Ï¿ªÆÕÍ¨º¯Êı
+	//æ–­å¼€æ™®é€šå‡½æ•°
 	template <typename T>
 	void disconnect(T func)
 	{
@@ -228,7 +227,7 @@ public:
 			HandlerList.erase(address);
 		}
 	}
-	//¶Ï¿ªÈ«¾Öº¯Êı
+	//æ–­å¼€å…¨å±€å‡½æ•°
 	template <typename T>
 	void disconnect(T* func)
 	{
@@ -239,12 +238,12 @@ public:
 			HandlerList.erase(address);
 		}
 	}
-	//¶Ï¿ªÀàÄÚº¯Êı
+	//æ–­å¼€ç±»å†…å‡½æ•°
 	template <typename T>
 	void disconnect(T* receiver, void(T::* func)(Args...))
 	{
 		void* buffer = nullptr;
-		memcpy(&buffer, &func, sizeof(func));   //Ç¿ÖÆÈ¡³öº¯ÊıÖ¸ÕëÄÚ²¿µÄµØÖ·
+		memcpy(&buffer, &func, sizeof(func));   //å¼ºåˆ¶å–å‡ºå‡½æ•°æŒ‡é’ˆå†…éƒ¨çš„åœ°å€
 		auto address = Address(receiver, buffer);
 		if (HandlerList.count(address) == 1)
 		{
@@ -261,7 +260,7 @@ public:
 		}
 		HandlerList.clear();
 	}
-	//·¢ËÍĞÅºÅÒ²¾ÍÊÇ´¥·¢Ö®Ç°¶¨Òå·Âº¯Êı
+	//å‘é€ä¿¡å·ä¹Ÿå°±æ˜¯è§¦å‘ä¹‹å‰å®šä¹‰ä»¿å‡½æ•°
 	template<typename ...Srgs>
 	void emit(Srgs&&...srgs)
 	{
@@ -269,18 +268,18 @@ public:
 		for (auto it = result.begin; it != result.end;)
 		{
 			void* receiver = it->first.first;
-			if (receiver == nullptr)    //µÚÒ»¸ö²ÎÊıÎªnullptrËµÃ÷ÊÇ²»ÊÇÀàÄÚº¯Êı,Õı³£Ö´ĞĞ
+			if (receiver == nullptr)    //ç¬¬ä¸€ä¸ªå‚æ•°ä¸ºnullptrè¯´æ˜æ˜¯ä¸æ˜¯ç±»å†…å‡½æ•°,æ­£å¸¸æ‰§è¡Œ
 			{
 				(*it->second)(srgs...);
 				it++;
 			}
-			else if (ObjectList.count(receiver) == 0) //ÔÙobjectÀïÃæÕÒ²»µ½·¢ËÍÕß,ËµÃ÷ÊÇ±»deleteÁË
-			{                                                //×Ô¶¯Ğ£Õı£¬É¾³ı¸ÃÔªËØ
+			else if (ObjectList.count(receiver) == 0) //å†objecté‡Œé¢æ‰¾ä¸åˆ°å‘é€è€…,è¯´æ˜æ˜¯è¢«deleteäº†
+			{                                                //è‡ªåŠ¨æ ¡æ­£ï¼Œåˆ é™¤è¯¥å…ƒç´ 
 				delete (it->second);
 				HandlerList.erase(it->first);
 				it++;
 			}
-			else    //ÕâÖÖÇé¿öËµÃ÷£¬ÄÜÕÒµ½Õı³£´¥·¢
+			else    //è¿™ç§æƒ…å†µè¯´æ˜ï¼Œèƒ½æ‰¾åˆ°æ­£å¸¸è§¦å‘
 			{
 				(*it->second)(srgs...);
 				it++;
