@@ -109,7 +109,7 @@ private:
 	std::map<T, U> WriteMap;
 	std::mutex MapMutex;
 	bool Writed = false;
-	std::atomic<int> RendingNum = 0;
+	std::atomic<int> ReadingNum = 0;
 	unsigned int m_Size = 0;
 public:
 	void insert(std::pair<T,U> pair)
@@ -153,25 +153,25 @@ public:
 		}
 		return { ReadMap.begin(),ReadMap.end() };
 	}
-	bool ReadyRend()
+	bool ReadyRead()
 	{
 		while (1) 		//有两种情况可以同时读写,第一种情况没人读，那你随便读				
 		{				//第二种情况有人读，数据不会改，你也可以去读,如果都不满足就等待别人读完了再读
-			if (RendingNum == 0)
+			if (ReadingNum == 0)
 			{
-				RendingNum++;
+				ReadingNum++;
 				return true;
 			}
-			else if (RendingNum > 0  && Writed == false)
+			else if (ReadingNum > 0  && Writed == false)
 			{
-				RendingNum++;
+				ReadingNum++;
 				return true;
 			}
 		}
 	}
-	void RendEnd()
+	void ReadEnd()
 	{
-		RendingNum--;
+		ReadingNum--;
 	}
 };
 //事件处理
@@ -274,7 +274,7 @@ public:
 	template<typename ...Srgs>
 	void emit(Srgs&&...srgs)
 	{
-		if (HandlerList.ReadyRend())
+		if (HandlerList.ReadyRead())
 		{
 			auto result = HandlerList.BeginAndEnd();
 			for (auto it = result.begin; it != result.end;)
@@ -297,7 +297,7 @@ public:
 					it++;
 				}
 			}
-			HandlerList.RendEnd();
+			HandlerList.ReadEnd();
 		}
 	}
 };
