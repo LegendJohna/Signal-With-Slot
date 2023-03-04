@@ -201,14 +201,9 @@ public:
         //分配一个id来断开连接,毕竟lambda式是没法寻找的
         LambdaID++;
         auto address = Address(nullptr, reinterpret_cast<void*>(LambdaID));
-        if (HandlerList.count(address) == 0)
-        {
-            auto handler = new OrdinaryEventHandler<T, Args...>(func);
-            HandlerList.insert(std::pair<Address, Handler>(address, handler));
-            return LambdaID;
-        }
-        LambdaID--;
-        return -1;
+        auto handler = new OrdinaryEventHandler<T, Args...>(func);
+        HandlerList.insert(std::pair<Address, Handler>(address, handler));
+        return LambdaID;
     }
     //全局函数
     template <typename T>
