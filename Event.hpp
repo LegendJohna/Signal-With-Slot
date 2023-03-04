@@ -186,6 +186,7 @@ class Event
     using Address = std::pair<void*, void*>;//第一个是对象地址，第二个是函数地址
 private:
     ConcurrentMap<Address, Handler> HandlerList;
+    int LambdaID = 0;
 public:
     ~Event()
     {
@@ -195,14 +196,19 @@ public:
     inline int ConnectionCount() { return HandlerList.size(); }
     //仿函数，静态函数，lambda表达式
     template <typename T>
-    void connect(T func)
+    int connect(T func)
     {
-        auto address = Address(nullptr, &func);
+        //分配一个id来断开连接,毕竟lambda式是没法寻找的
+        LambdaID++;
+        auto address = Address(nullptr, reinterpret_cast<void*>(LambdaID));
         if (HandlerList.count(address) == 0)
         {
             auto handler = new OrdinaryEventHandler<T, Args...>(func);
             HandlerList.insert(std::pair<Address, Handler>(address, handler));
+            return LambdaID;
         }
+        LambdaID--;
+        return -1;
     }
     //全局函数
     template <typename T>
@@ -232,10 +238,9 @@ public:
         }
     }
     //断开普通函数
-    template <typename T>
-    void disconnect(T func)
+    void disconnect(int connectionID)
     {
-        auto address = Address(nullptr, &func);
+        auto address = Address(nullptr, reinterpret_cast<void*>(connectionID));
         if (HandlerList.count(address) == 1)
         {
             delete HandlerList.at(address);
