@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <atomic>
+#include <iostream>
 /*
     这个类是在定义抽象函数接口
     为了实现类似function那样的功能
@@ -78,18 +79,48 @@ public:
         (m_Receiver->*m_Handler)(args...);
     }
 };
-//用来存object地址，用来进行校正
-static std::unordered_set<void*> ObjectList;
+//单例事件队列
+class ObjectList
+{
+private:
+    ObjectList() = default;
+    std::unordered_set<void*> list;
+    std::mutex ListMutex;
+public:
+    // = delete 代表函数禁用, 也可以将其访问权限设置为私有
+    ObjectList(const ObjectList& obj) = delete;
+    ObjectList& operator=(const ObjectList& obj) = delete;
+    static ObjectList* getInstance()
+    {
+        static ObjectList list;
+        return &list;
+    }
+    void insert(void* obj)
+    {
+        std::lock_guard<std::mutex> lock(ListMutex);
+		list.insert(obj);
+	}
+    void erase(void* obj)
+    {
+		std::lock_guard<std::mutex> lock(ListMutex);
+		list.erase(obj);
+	}
+    bool find(void* obj)
+    {
+		std::lock_guard<std::mutex> lock(ListMutex);
+		return list.find(obj) != list.end();
+	}
+};
 class Object
 {
 public:
     Object()
     {
-        ObjectList.insert((void*)this);
+        ObjectList::getInstance()->insert((void*)this);
     }
     ~Object()
     {
-        ObjectList.erase((void*)this);
+        ObjectList::getInstance()->erase((void*)this);
     }
 };
 //多线程处理,采用双map来继续管理
@@ -290,8 +321,9 @@ public:
                     (*it->second)(srgs...);
                     it++;
                 }
-                else if (ObjectList.count(receiver) == 0) //再object里面找不到发送者,说明是被delete了
-                {                                                //自动校正，删除该元素
+                else if (!ObjectList::getInstance()->find(receiver)) //再object里面找不到发送者,说明是被delete了
+                {     
+                                                    //自动校正，删除该元素
                     delete (it->second);
                     HandlerList.erase(it->first);
                     it++;
